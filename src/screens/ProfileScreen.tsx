@@ -87,8 +87,8 @@ export function ProfileScreen() {
 
       <Section eyebrow="Программа" title="Состав тренировок">
         <p className="muted small" style={{ margin: 0 }}>
-          Тренировки чередуются по дням: {state.templates.map((t) => t.id).join(' → ')}. Чёрным отмечено выбранное, салатовой обводкой —
-          упражнения, которые уже есть в другой тренировке: их можно взять повторно, но лучше не дублировать.
+          Тренировки чередуются по дням: {state.templates.map((t) => t.id).join(' → ')}. Салатовые с ✓ — уже в тренировке, тусклые с «+» — можно добавить.
+          Метка A/B — упражнение уже есть в другой тренировке: его можно взять повторно, но лучше не дублировать.
         </p>
         {state.templates.map((t) => (
           <div key={t.id} className="stack" style={{ gap: 8 }}>
@@ -96,11 +96,12 @@ export function ProfileScreen() {
               {t.name}
             </div>
             <div className="row wrap" style={{ gap: 6 }}>
-              {EXERCISES.map((e) => {
+              {[...EXERCISES].sort((x, y) => Number(t.exerciseIds.includes(y.id)) - Number(t.exerciseIds.includes(x.id))).map((e) => {
                 const elsewhere = state.templates.filter((o) => o.id !== t.id && o.exerciseIds.includes(e.id)).map((o) => o.id)
                 const on = t.exerciseIds.includes(e.id)
                 return (
-                  <button key={e.id} className={`chip ${on ? 'wine' : ''} ${elsewhere.length ? 'in-other' : ''}`} onClick={() => toggle(t.id, e.id)}>
+                  <button key={e.id} className={`chip ${on ? 'pick-on' : 'pick-off'}`} aria-pressed={on} onClick={() => toggle(t.id, e.id)}>
+                    <span className="pick-mark">{on ? '✓' : '+'}</span>
                     {exerciseById(e.id).name}
                     {elsewhere.length > 0 && <span className="tag">{elsewhere.join(', ')}</span>}
                   </button>

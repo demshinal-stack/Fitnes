@@ -2299,3 +2299,21 @@ img.vec,
   flex-direction: column;
   gap: 8px;
 }
+
+/* Состав тренировок: выбранное — салатовое, остальное — тусклое */
+.glass .chip.pick-on {
+  background: var(--lime);
+  color: #111;
+  border: 1px solid var(--lime);
+  box-shadow: 0 0 14px rgba(198, 244, 50, 0.35);
+  font-weight: 500;
+}
+.glass .chip.pick-off {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(20, 20, 20, 0.55);
+  border: 1px dashed rgba(20, 20, 20, 0.28);
+  box-shadow: none;
+}
+.chip .pick-mark { font-weight: 600; margin-right: 2px; }
+.chip.pick-on .tag { background: #111; color: var(--lime); }
+.chip.pick-off .tag { background: rgba(20, 20, 20, 0.12); color: rgba(20, 20, 20, 0.6); }
