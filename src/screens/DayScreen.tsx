@@ -1,7 +1,7 @@
 import { HolePicker } from '../components/pickers'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Brand } from '../components/Brand'
-import { exerciseById, machineById } from '../data/machines'
+import { exerciseById, machineById, TEMPLATE_TAGLINES } from '../data/machines'
 import { addDays, formatDayLong, todayISO, weekday } from '../lib/date'
 import { copiedSets, growth, recommendedPlan, stepFor, plannedDay, plannedDays, previousPlan, programEnd, settingsFor, stackWeights, weekIndex } from '../lib/plan'
 import { useStore } from '../store'
@@ -90,6 +90,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
   const minutes = Math.round((allSets.length * 2 + 5) / 5) * 5
   const areas = [...new Set(day.exercises.map((e) => exerciseById(e.exerciseId).area))]
   const muscles = areas.length > 1 ? `${areas.slice(0, -1).join(', ')} и ${areas[areas.length - 1]}` : areas[0]
+  const tagline = day.template.tagline ?? TEMPLATE_TAGLINES[day.template.id] ?? `${muscles}.`
   const totalWeeks = weekIndex(addDays(programEnd(p), -1), p.startDate) + 1
 
   return (
@@ -114,7 +115,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
         <h1 className="display">
           {day.template.name}
           <br />
-          <em>{muscles}.</em>
+          <em>{tagline}</em>
         </h1>
         <div className="row wrap" style={{ gap: 8, marginTop: 6 }}>
           {day.week >= 0 ? (

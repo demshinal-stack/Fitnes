@@ -721,15 +721,23 @@ const ALL_EXERCISES: Exercise[] = [
 /** Меняется, когда состав тренировок по умолчанию переделан целиком */
 export const TEMPLATES_VERSION = 2
 
+/** Подписи тренировок от пользователя (2026-10-29); работают и для уже сохранённых шаблонов */
+export const TEMPLATE_TAGLINES: Record<string, string> = {
+  A: 'тяни. толкай. сгибай.',
+  B: 'архитектура тела: v-образность',
+}
+
 export const DEFAULT_TEMPLATES: WorkoutTemplate[] = [
   {
     id: 'A',
     name: 'Тренировка A',
+    tagline: TEMPLATE_TAGLINES.A,
     exerciseIds: ['seated-cable-row', 'seated-leg-curl', 'lying-leg-curl', 'hip-abduction', 'hip-adduction', 'chest-press', 'cable-triceps-pushdown', 'dumbbell-front-raise', 'dead-bug'],
   },
   {
     id: 'B',
     name: 'Тренировка B',
+    tagline: TEMPLATE_TAGLINES.B,
     // Состав по выбору пользователя 2026-10-29; ещё упражнения она добавит позже
     exerciseIds: ['lat-pulldown', 'dumbbell-shoulder-press', 'reclined-hip-abduction', 'ball-crunch'],
   },

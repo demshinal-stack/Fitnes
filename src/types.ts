@@ -81,6 +81,8 @@ export interface ExerciseOverride {
 export interface WorkoutTemplate {
   id: string
   name: string
+  /** Подпись под названием на экране дня */
+  tagline?: string
   exerciseIds: string[]
 }
 
