@@ -1,0 +1,61 @@
+/* Styles for GymMachines SVG. Monochrome black/white; lime = weight and settings, pink = working muscles; natural skin tone. */
+.gm{--gm-body:#1C1C1C;--gm-accent:#111111;--gm-over:#5E7A12;--gm-blue:#C6F432;--gm-pink:#FF8FB8;--gm-metal:#BDBDBD;--gm-ink:#1C1C1C;--gm-glass:rgba(255,255,255,.62);--gm-edge:#FFFFFF;--gm-plate:#FFFFFF;
+  display:block;width:100%;height:auto;font-family:"Montserrat",system-ui,sans-serif}
+.gm path,.gm line{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gm{--gm-skin:#E9B596;--gm-skin-act:#F58FB4;--gm-cloth:#1E1E1E;--gm-legs:#3B3B3D;--gm-cloth-act:#E8609E;--gm-hair:#B8935F;--gm-hair-d:#7C5E36;--gm-shoe:#FFFFFF}
+/* the girl: burgundy top and leggings, bare arms, white sneakers, ponytail */
+.gm .tr,.gm .trf{stroke:#FFFFFF}.gm .tr-o,.gm .trf-o{stroke:#BDBDBD}.gm .tr-o{stroke-width:23.5}.gm .trf-o{stroke-width:34.5}.gm .th,.gm .sh{stroke:var(--gm-legs)}.gm .glute{fill:var(--gm-legs);stroke:none}
+.gm .ua,.gm .fa,.gm .nk,.gm .shl{stroke:var(--gm-skin)}
+.gm .ft{stroke:var(--gm-shoe)}.gm .ft-o{stroke:#9A9A9A;stroke-width:11}
+.gm .tr{stroke-width:21}.gm .trf{stroke-width:32}.gm .shl{stroke-width:11}.gm .th{stroke-width:18}.gm .sh{stroke-width:12}.gm .ft{stroke-width:8}
+.gm .ua{stroke-width:9.5}.gm .fa{stroke-width:8}.gm .nk{stroke-width:7}
+.gm .hd{fill:var(--gm-skin);stroke:none}
+.gm .bust{fill:#FFFFFF;stroke:#BDBDBD;stroke-width:1.2}
+.gm .hair{fill:var(--gm-hair);stroke:var(--gm-hair-d);stroke-width:.6}
+.gm .pony{fill:var(--gm-hair);stroke:var(--gm-hair-d);stroke-width:.8}
+.gm .tie{fill:var(--gm-hair-d);stroke:none}
+.gm .hand{fill:var(--gm-skin);stroke:none}
+.gm .glow{fill:var(--gm-pink);opacity:.45;stroke:none}
+.gm .frame{fill:#EFEFEF;stroke:#BDBDBD;stroke-width:3}
+.gm .metal{stroke:var(--gm-metal);stroke-width:8}
+.gm .metal-thin{stroke:var(--gm-metal);stroke-width:5}
+.gm .rail{stroke:var(--gm-metal);stroke-width:8}
+.gm .pad{fill:#A6A6A6;stroke:#8A8A8A;stroke-width:2}
+.gm .grip{stroke:#111;stroke-width:9}
+.gm .plate{fill:#2A2A2A;stroke:#5A5A5A;stroke-width:1}
+.gm .act-plate{fill:var(--gm-blue);stroke:#1C1C1C}
+.gm .pin{fill:var(--gm-accent);stroke:#fff;stroke-width:1.5}
+.gm .rod{stroke:var(--gm-ink);stroke-width:3}
+.gm .cable{stroke:var(--gm-ink);stroke-width:2.5;opacity:.75}
+.gm .pulley{fill:#fff;stroke:var(--gm-metal);stroke-width:3}
+.gm .wheel{fill:#fff;stroke:var(--gm-accent);stroke-width:3}
+.gm .floor{stroke:var(--gm-metal);stroke-width:4;opacity:.7}
+.gm .hole{fill:#fff;stroke:var(--gm-ink);stroke-width:1.5}
+.gm .hole.on{fill:var(--gm-accent);stroke:var(--gm-accent)}
+.gm .hole.rec{fill:var(--gm-blue);stroke:#5E7A12}
+.gm .rec-mark{stroke:#8DB51C;stroke-width:4}
+.gm text.lbl{font-size:11.5px;font-weight:800;fill:var(--gm-ink);letter-spacing:.01em}
+.gm text.sel-lbl{fill:var(--gm-accent);font-size:13px;font-weight:900}
+.gm text.rec-lbl{fill:#5E7A12;font-size:10px;font-weight:800}
+.gm text.tiny{font-size:9px;font-weight:700;fill:var(--gm-ink);opacity:.85}
+.gm text.tiny.on{fill:var(--gm-accent);opacity:1;font-weight:900}
+.gm text.dim{font-size:8.5px;letter-spacing:.04em}
+.gm text.warn{fill:var(--gm-over);font-size:10px;font-weight:900}
+.gm .hit{fill:transparent;stroke:none;cursor:pointer}
+.gm [data-part]{cursor:pointer}
+.gm .tap{stroke:var(--gm-accent);stroke-width:2.5;stroke-dasharray:4 4}
+.gm .lbl-bg{fill:#fff;stroke:var(--gm-accent);stroke-width:2}
+.gm .far{opacity:.4}
+.gm .bell{fill:#fff;stroke:var(--gm-ink);stroke-width:2.5}
+.gm .bell.far{fill:#fff}
+.gm .ball{fill:rgba(210,210,210,.6);stroke:#fff;stroke-width:3}
+.gm .ball-hl{stroke:#fff;stroke-width:4;opacity:.85}
+.gm .guide{stroke:#8DB51C;stroke-width:2.5;stroke-dasharray:6 5}
+.gm .over-plate{fill:var(--gm-over);stroke:#C6F432}
+.gm .metal-thin.sep{opacity:.4}
+.gm .arrow{stroke:var(--gm-accent);stroke-width:3;fill:none;stroke-dasharray:5 4}
+.gm .glow.low{opacity:.5}
+/* thumbnails sit on near-white: give pads and frames a pink fill and a visible outline */
+.gm-thumb .pad,.gm-thumb .frame{fill:#E6E6E6;stroke:#9A9A9A;stroke-width:3}
+.gm-thumb .plate{stroke:var(--gm-metal);stroke-width:1.4}
+.gm-thumb .ball{fill:#E3E3E3;stroke:#9A9A9A}
