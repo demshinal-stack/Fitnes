@@ -224,6 +224,9 @@ const outline = ({ chest, waist, hips }: Widths) => {
   return d + ' Z'
 }
 
+const ARM =
+  'M152,24 C168,25 176,40 176,60 C178,98 181,138 183,178 C185,204 189,222 187,236 C185,245 172,245 170,236 C168,222 168,204 166,182 C163,150 160,118 156,96 C154,80 152,60 150,40 Z'
+
 function BodyFigure({ stats }: { stats: ReturnType<typeof measureStats>['stats'] }) {
   const base: Widths = { chest: 52, waist: 40, hips: 58 }
   const clamp = (v: number) => Math.max(-14, Math.min(14, v))
@@ -238,13 +241,23 @@ function BodyFigure({ stats }: { stats: ReturnType<typeof measureStats>['stats']
     { key: 'hips', y: 212, label: 'бёдра' },
   ]
   return (
-    <svg className="body-figure" viewBox="-10 0 220 310" role="img" aria-label="Изменение обхватов от стартового замера">
+    <svg className="body-figure" viewBox="-45 0 290 310" role="img" aria-label="Изменение обхватов от стартового замера">
       <defs>
         <linearGradient id="bf-skin" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor="#d9d4cf" />
           <stop offset="1" stopColor="#b9b3ad" />
         </linearGradient>
       </defs>
+      {/* Руки опущены вдоль тела, за силуэтом */}
+      {[1, -1].map((side) => (
+        <path
+          key={side}
+          d={ARM}
+          transform={side < 0 ? 'matrix(-1 0 0 1 200 0)' : undefined}
+          fill="url(#bf-skin)"
+          opacity="0.5"
+        />
+      ))}
       <path d={outline(base)} fill="url(#bf-skin)" opacity="0.55" />
       {/* Белая майка и тёмные легинсы, как у девушки на анимациях */}
       <clipPath id="bf-clip">
@@ -263,10 +276,10 @@ function BodyFigure({ stats }: { stats: ReturnType<typeof measureStats>['stats']
         return (
           <g key={key}>
             <line x1={100 - w} x2={100 + w} y1={y} y2={y} stroke="#c6f432" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.8" />
-            <text x={100 + w + 6} y={y + 4} fontSize="11" fill="#f2f2f2" fontFamily="Outfit, sans-serif">
+            <text x={196} y={y + 4} fontSize="11" fill="#f2f2f2" fontFamily="Outfit, sans-serif">
               {st ? `${fmtDelta(st.delta)} см` : '—'}
             </text>
-            <text x={100 - w - 6} y={y + 4} fontSize="10" fill="rgba(255,255,255,.55)" textAnchor="end" fontFamily="Outfit, sans-serif">
+            <text x={4} y={y + 4} fontSize="10" fill="rgba(255,255,255,.55)" textAnchor="end" fontFamily="Outfit, sans-serif">
               {label}
             </text>
           </g>
