@@ -1,7 +1,7 @@
 import { HolePicker } from '../components/pickers'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Brand } from '../components/Brand'
-import { exerciseById, machineById, TEMPLATE_TAGLINES } from '../data/machines'
+import { exerciseById, machineById, EXERCISES, TEMPLATE_TAGLINES } from '../data/machines'
 import { addDays, formatDayLong, todayISO, weekday } from '../lib/date'
 import { copiedSets, growth, recommendedPlan, stepFor, plannedDay, plannedDays, previousPlan, programEnd, settingsFor, stackWeights, weekIndex } from '../lib/plan'
 import { useStore } from '../store'
@@ -202,9 +202,26 @@ export function DayScreen({ date: requested }: { date?: string }) {
       </div>
 
       {ordering ? (
-        <OrderList ids={day.exercises.map((e) => e.exerciseId)} templateId={day.template.id} />
+        <OrderList ids={day.exercises.filter((e) => !e.extra).map((e) => e.exerciseId)} templateId={day.template.id} />
       ) : (
-        day.exercises.map((pe) => <ExerciseCard key={pe.exerciseId} date={date} plan={pe} locked={completed} />)
+        <>
+          {day.exercises.map((pe) => (
+            <div key={pe.exerciseId} className="stack" style={{ gap: 6 }}>
+              {pe.extra && (
+                <div className="row between extra-label">
+                  <span className="small">+ добавлено на этот день</span>
+                  {!completed && (
+                    <button className="link small" onClick={() => dispatch({ type: 'extra', date, exerciseId: pe.exerciseId, on: false })}>
+                      Убрать
+                    </button>
+                  )}
+                </div>
+              )}
+              <ExerciseCard date={date} plan={pe} locked={completed} />
+            </div>
+          ))}
+          {!completed && <AddExtra date={date} have={day.exercises.map((e) => e.exerciseId)} />}
+        </>
       )}
 
       <button className={`btn block ${completed ? 'ghost' : ''}`} onClick={() => dispatch({ type: 'complete', date, completed: !completed })}>
@@ -575,6 +592,44 @@ function ExerciseCard({ date, plan, locked }: { date: string; plan: PlannedExerc
             )}
           </div>
         </div>
+      )}
+    </section>
+  )
+}
+
+/** Добавить упражнение только в эту тренировку: «A и ещё что-то» */
+function AddExtra({ date, have }: { date: string; have: string[] }) {
+  const { dispatch } = useStore()
+  const [open, setOpen] = useState(false)
+  const rest = EXERCISES.filter((e) => !have.includes(e.id))
+  if (rest.length === 0) return null
+  return (
+    <section className="glass card stack fade-in" style={{ gap: 10 }}>
+      <button className="btn block ghost" onClick={() => setOpen(!open)}>
+        {open ? 'Свернуть' : '+ Добавить упражнение на сегодня'}
+      </button>
+      {open && (
+        <>
+          <p className="muted small" style={{ margin: 0 }}>
+            Добавится только в этот день. Чтобы упражнение было в тренировке всегда, включи его в Профиле → «Состав тренировок».
+          </p>
+          {rest.map((e) => (
+            <button
+              key={e.id}
+              className="ex-row"
+              onClick={() => {
+                dispatch({ type: 'extra', date, exerciseId: e.id, on: true })
+                setOpen(false)
+              }}
+            >
+              <Thumb className="thumb" exerciseId={e.id} />
+              <span className="title" style={{ flex: 1, textAlign: 'left', fontSize: 15 }}>
+                {e.name}
+              </span>
+              <span className="lime-plus">+</span>
+            </button>
+          ))}
+        </>
       )}
     </section>
   )

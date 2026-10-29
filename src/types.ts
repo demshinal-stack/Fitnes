@@ -170,6 +170,8 @@ export interface AppState {
   skipped?: Record<string, true>
   /** Тренировка, выбранная вручную на дату (A/B); дальше чередование продолжается от неё */
   templateOverrides?: Record<string, string>
+  /** Упражнения, добавленные к тренировке только на этот день */
+  extraExercises?: Record<string, string[]>
 }
 
 export interface PlannedExercise {
@@ -178,6 +180,8 @@ export interface PlannedExercise {
   reps: number
   weight: number
   deload: boolean
+  /** Добавлено только на этот день, не входит в тренировку A/B */
+  extra?: boolean
 }
 
 export interface PlannedDay {

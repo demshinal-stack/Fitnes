@@ -76,6 +76,7 @@ export type Action =
   | { type: 'clearWeight'; exerciseId: string; date: string }
   | { type: 'dayOverride'; date: string; on: boolean | null }
   | { type: 'skip'; date: string; on: boolean }
+  | { type: 'extra'; date: string; exerciseId: string; on: boolean }
   | { type: 'templateFor'; date: string; templateId: string | null }
   | { type: 'goal'; goal: Goal }
   | { type: 'groupVisit'; visit: GroupVisit }
@@ -154,6 +155,10 @@ export const reducer = (s: AppState, a: Action): AppState => {
           ],
         },
       }
+    case 'extra': {
+      const list = (s.extraExercises?.[a.date] ?? []).filter((id) => id !== a.exerciseId)
+      return { ...s, extraExercises: { ...s.extraExercises, [a.date]: a.on ? [...list, a.exerciseId] : list } }
+    }
     case 'skip': {
       const skipped = { ...s.skipped }
       if (a.on) skipped[a.date] = true

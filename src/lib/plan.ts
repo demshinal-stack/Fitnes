@@ -141,7 +141,12 @@ export const plannedDays = (state: AppState, from: string, to: string): PlannedD
         template,
         week,
         deload: isDeloadWeek(week),
-        exercises: template.exerciseIds.filter(isAvailable).map((id) => planExercise(state, id, d)),
+        exercises: [
+          ...template.exerciseIds.filter(isAvailable).map((id) => planExercise(state, id, d)),
+          ...(state.extraExercises?.[d] ?? [])
+            .filter((id) => isAvailable(id) && !template.exerciseIds.includes(id))
+            .map((id) => ({ ...planExercise(state, id, d), extra: true })),
+        ],
         ...(skipped ? { skipped } : {}),
       })
     }
