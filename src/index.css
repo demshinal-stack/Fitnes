@@ -2377,3 +2377,19 @@ img.vec,
 .extra-label { padding: 0 6px; color: var(--lime); }
 .extra-label .link { color: rgba(255, 255, 255, 0.6); }
 .lime-plus { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--lime); color: #111; font-weight: 600; }
+
+/* Замеры тела */
+.body-figure { width: 100%; max-height: 320px; background: rgba(0, 0, 0, 0.28); border-radius: 22px; padding: 10px 0; }
+.measure-table { display: grid; gap: 2px; font-size: 14px; }
+.mt-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 22px; gap: 6px; align-items: center; padding: 8px 6px; border-radius: 12px; }
+.mt-row > span { display: flex; flex-direction: column; line-height: 1.2; }
+.mt-row small { font-size: 11px; opacity: 0.7; }
+.mt-row small.mt-delta { color: #4f6a00; opacity: 1; font-weight: 600; }
+.mt-head { font-size: 12px; opacity: 0.6; padding-top: 0; padding-bottom: 0; }
+.mt-start { background: rgba(198, 244, 50, 0.22); }
+.mt-flag { border: 0; background: none; padding: 0; font: inherit; font-size: 10px; color: rgba(20, 20, 20, 0.45); text-align: left; text-decoration: underline; }
+.mt-flag.on { color: #4f6a00; text-decoration: none; font-weight: 600; }
+.mt-del { border: 0; background: none; font-size: 18px; color: rgba(20, 20, 20, 0.4); padding: 0; }
+.measure-inputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.measure-inputs .input { min-width: 0; width: 100%; text-align: center; }
+.measured { padding: 10px 12px; border-radius: 14px; background: rgba(198, 244, 50, 0.12); border: 1px solid rgba(198, 244, 50, 0.35); }

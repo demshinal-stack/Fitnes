@@ -172,6 +172,18 @@ export interface AppState {
   templateOverrides?: Record<string, string>
   /** Упражнения, добавленные к тренировке только на этот день */
   extraExercises?: Record<string, string[]>
+  /** Замеры тела, см */
+  measurements?: Measurement[]
+  /** Замер, от которого считается прирост; по умолчанию самый ранний */
+  measureStart?: string
+}
+
+export interface Measurement {
+  id: string
+  date: string
+  hips?: number
+  waist?: number
+  chest?: number
 }
 
 export interface PlannedExercise {

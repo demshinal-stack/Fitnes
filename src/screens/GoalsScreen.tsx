@@ -9,6 +9,10 @@ import type { AppState, LifeGoal } from '../types'
 import { GOAL_MODELS, type GoalModel } from '../data/goalModels'
 import { effectAfter, etaDate, goalRate, goalSessions, programEndOf, strengthGain } from '../lib/goalProgress'
 import { weekIndex } from '../lib/plan'
+import { MeasurementsSection, fmtDelta, measureStats, type MeasureKey } from '../components/Measurements'
+
+/** Цели, прогресс которых виден сантиметром */
+const GOAL_MEASURE: Record<string, MeasureKey> = { glutes: 'hips', belly: 'waist' }
 
 /** Сделанные подходы по упражнениям цели за последние 30 дней и тренировки с момента постановки цели */
 const progressOf = (state: AppState, goal: LifeGoal, exercises: string[]) => {
@@ -52,6 +56,8 @@ export function GoalsScreen() {
       {goals.map((g) => (
         <GoalCard key={g.id} goal={g} />
       ))}
+
+      <MeasurementsSection />
 
       <FocusList goals={goals.filter((g) => !g.done)} />
 
@@ -209,6 +215,18 @@ function Tracker({ goal, model: m, exercises, save }: { goal: LifeGoal; model: G
   const months = [1, 3, 6, 12].map((mo) => ({ mo, v: effectAfter(m, rate * mo * 4.35, boosted) }))
   const ceiling = m.max * (boosted && m.boost ? m.boost : 1)
   const strength = strengthGain(state, exercises)
+  const measured = (() => {
+    const key = goal.preset ? GOAL_MEASURE[goal.preset] : undefined
+    const { start, stats } = measureStats(state)
+    const st = key && stats[key]
+    if (!st || !start || st.months <= 0) return undefined
+    const label = key === 'hips' ? 'бёдра' : 'талия'
+    const done = st.delta * m.sign
+    const rate = st.perMonth !== undefined ? st.perMonth * m.sign : undefined
+    const eta =
+      done >= target ? todayISO() : rate && rate > 0 ? addDays(todayISO(), Math.ceil(((target - done) / rate) * 30.44)) : undefined
+    return { label, delta: st.delta, perMonth: st.perMonth, since: start.date, eta }
+  })()
 
   return (
     <div className="tracker stack" style={{ gap: 10 }}>
@@ -248,6 +266,25 @@ function Tracker({ goal, model: m, exercises, save }: { goal: LifeGoal; model: G
         )}
         {end && endN > n && <> К концу программы ({formatDay(end)}) — около {signed(m, effectAfter(m, endN, boosted))}.</>}
       </div>
+      {measured && (
+        <div className="measured small">
+          <b>По замерам</b> ({measured.label}): {fmtDelta(measured.delta)} см с {formatDay(measured.since)}
+          {measured.perMonth !== undefined && <>, в среднем {fmtDelta(measured.perMonth)} см в месяц</>}.{' '}
+          {measured.eta ? (
+            measured.eta <= todayISO() ? (
+              <b className="lime-text">Цель по сантиметру достигнута!</b>
+            ) : (
+              <>
+                В таком темпе цель {signed(m, target)} — <b className="lime-text">к {formatDay(measured.eta)}{measured.eta.slice(0, 4) !== todayISO().slice(0, 4) ? ` ${measured.eta.slice(0, 4)}` : ''}</b>.
+              </>
+            )
+          ) : measured.perMonth !== undefined ? (
+            <>Пока движение не в сторону цели — смотри на тренд через пару замеров.</>
+          ) : (
+            <>Темп появится после замеров с разницей хотя бы в 2–3 недели.</>
+          )}
+        </div>
+      )}
       <div className="row wrap" style={{ gap: 6 }}>
         {months.map(({ mo, v }) => (
           <span key={mo} className="chip">

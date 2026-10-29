@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useReducer, type ReactNode } from
 import { useCloudSync, type CloudStatus } from './lib/cloud'
 import { DEFAULT_TEMPLATES, EXERCISES, TEMPLATES_VERSION } from './data/machines'
 import { anchorFromLog, isDeloadWeek, overWeight, weekIndex } from './lib/plan'
-import type { AppState, DayLog, ExerciseOverride, Goal, GroupVisit, LifeGoal, Profile, SetLog, StackSpec, WorkoutTemplate } from './types'
+import type { AppState, Measurement, DayLog, ExerciseOverride, Goal, GroupVisit, LifeGoal, Profile, SetLog, StackSpec, WorkoutTemplate } from './types'
 
 const KEY = 'gym-diary/v1'
 
@@ -77,6 +77,9 @@ export type Action =
   | { type: 'dayOverride'; date: string; on: boolean | null }
   | { type: 'skip'; date: string; on: boolean }
   | { type: 'extra'; date: string; exerciseId: string; on: boolean }
+  | { type: 'measure'; m: Measurement }
+  | { type: 'removeMeasure'; id: string }
+  | { type: 'measureStart'; id: string | undefined }
   | { type: 'templateFor'; date: string; templateId: string | null }
   | { type: 'goal'; goal: Goal }
   | { type: 'groupVisit'; visit: GroupVisit }
@@ -155,6 +158,14 @@ export const reducer = (s: AppState, a: Action): AppState => {
           ],
         },
       }
+    case 'measure': {
+      const list = (s.measurements ?? []).filter((m) => m.id !== a.m.id)
+      return { ...s, measurements: [...list, a.m].sort((x, y) => x.date.localeCompare(y.date)) }
+    }
+    case 'removeMeasure':
+      return { ...s, measurements: (s.measurements ?? []).filter((m) => m.id !== a.id), measureStart: s.measureStart === a.id ? undefined : s.measureStart }
+    case 'measureStart':
+      return { ...s, measureStart: a.id }
     case 'extra': {
       const list = (s.extraExercises?.[a.date] ?? []).filter((id) => id !== a.exerciseId)
       return { ...s, extraExercises: { ...s.extraExercises, [a.date]: a.on ? [...list, a.exerciseId] : list } }
