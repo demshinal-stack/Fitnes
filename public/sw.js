@@ -1,5 +1,5 @@
 // Офлайн-кэш: страницы — сначала сеть, остальное — сначала кэш с фоновым обновлением
-const CACHE = 'jaylle-v2'
+const CACHE = 'jaylle-v3'
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))

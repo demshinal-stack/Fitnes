@@ -1,3 +1,4 @@
+import { HolePicker } from '../components/pickers'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Brand } from '../components/Brand'
 import { exerciseById, machineById } from '../data/machines'
@@ -357,6 +358,9 @@ function ExerciseCard({ date, plan, locked }: { date: string; plan: PlannedExerc
   const settings = settingsFor(state, ex)
   const logged = state.logs[date]?.exercises[ex.id] ?? copiedSets(state, date, ex.id)
   const [open, setOpen] = useState(false)
+  // Настройку тренажёра (спинка, валик, высота блока…) можно поправить прямо в карточке
+  const [editing, setEditing] = useState<string | null>(null)
+  const editingDef = ex.settings.find((s) => s.key === editing)
   const sets: SetLog[] = logged ?? Array.from({ length: plan.sets }, () => ({ weight: plan.weight, reps: plan.reps, done: false }))
   const doneCount = sets.filter((s) => s.done).length
   const weights = stackWeights(state, ex)
@@ -402,17 +406,40 @@ function ExerciseCard({ date, plan, locked }: { date: string; plan: PlannedExerc
               </svg>
             </button>
           </div>
+          <span className="chip rec-chip">
+            рек. {plan.reps} × {ex.bodyweight ? 'свой вес' : `${fmtKg(rec)} кг`}
+          </span>
           {ex.settings.length > 0 && (
             <div className="row wrap" style={{ gap: 6 }}>
               {ex.settings.map((s) => (
-                <span key={s.key} className="chip">
-                  {s.label}: <b>{settings[s.key]}</b>
-                </span>
+                <button
+                  key={s.key}
+                  className={`chip setting-chip ${editing === s.key ? 'wine' : ''}`}
+                  onClick={() => setEditing(editing === s.key ? null : s.key)}
+                  aria-expanded={editing === s.key}
+                >
+                  {s.label}: <b>{settings[s.key]}</b> <span aria-hidden="true">✎</span>
+                </button>
               ))}
             </div>
           )}
         </div>
       </div>
+      {editingDef && (
+        <div className="setting-edit">
+          <HolePicker
+            label={editingDef.label}
+            count={editingDef.max}
+            ends={editingDef.ends}
+            value={settings[editingDef.key]}
+            suggested={editingDef.suggest(state.profile!)}
+            onChange={(v) => dispatch({ type: 'override', exerciseId: ex.id, patch: { settings: { [editingDef.key]: v } } })}
+          />
+          <div className="muted small">
+            {editingDef.hint} Рекомендовано: {editingDef.suggest(state.profile!)}.
+          </div>
+        </div>
+      )}
       <div className="tiles">
         {sets.map((s, i) => (
           <button

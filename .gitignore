@@ -22,7 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Фото зала пользователя не публикуем
-public/machines/*.jpg
-/*.png

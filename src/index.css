@@ -2252,3 +2252,50 @@ img.vec,
   align-items: center;
   gap: 12px;
 }
+
+/* Вес сверх рекомендации: салатовая плашка с чёрным текстом — читается и на тёмной плитке, и на стекле */
+.over-w,
+.tile.on .over-w {
+  background: var(--lime);
+  color: #111;
+  font-weight: 700;
+  border-radius: 7px;
+  padding: 0 5px;
+  box-shadow: 0 0 10px rgba(198, 244, 50, 0.45);
+}
+.chip.over {
+  background: var(--lime);
+  color: #111;
+  font-weight: 600;
+}
+.stepper.over .val {
+  background: var(--lime);
+  color: #111;
+}
+.stepper.over .unit {
+  color: rgba(17, 17, 17, 0.7);
+}
+/* Рекомендованный вес в каждой карточке упражнения */
+.glass .chip.rec-chip {
+  align-self: flex-start;
+  background: rgba(17, 17, 17, 0.08);
+  border-color: rgba(17, 17, 17, 0.12);
+  color: #222;
+  font-weight: 500;
+}
+/* Настройки тренажёра правятся прямо из карточки */
+.setting-chip {
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.setting-chip span {
+  opacity: 0.55;
+  font-size: 11px;
+}
+.setting-edit {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
