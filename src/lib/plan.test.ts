@@ -33,6 +33,20 @@ describe('план', () => {
     ])
   })
 
+  it('пропущенная тренировка переносится, выбранная вручную продолжает чередование', () => {
+    const ids = (s: AppState) => plannedDays(s, '2026-11-02', '2026-11-11').map((d) => [d.date, d.template.id, !!d.skipped])
+    const skip = reducer(base(), { type: 'skip', date: '2026-11-04', on: true })
+    expect(ids(skip)).toEqual([
+      ['2026-11-02', 'A', false],
+      ['2026-11-04', 'B', true],
+      ['2026-11-06', 'B', false],
+      ['2026-11-09', 'A', false],
+      ['2026-11-11', 'B', false],
+    ])
+    const twiceA = reducer(base(), { type: 'templateFor', date: '2026-11-04', templateId: 'A' })
+    expect(ids(twiceA).map((r) => r[1])).toEqual(['A', 'A', 'B', 'A', 'B'])
+  })
+
   it('по умолчанию 3 × 15, вес растёт на шаг раз в две недели; разгрузок со снижением нет', () => {
     const s = base()
     const w = (d: string) => planExercise(s, 'seated-cable-row', d)

@@ -126,10 +126,15 @@ export const plannedDays = (state: AppState, from: string, to: string): PlannedD
   let session = 0
   for (let d = first; d < p.startDate; d = addDaysFast(d)) if (isTrainingDay(state, d)) session--
   const n = state.templates.length
+  let idx = ((session % n) + n) % n
   for (let d = first; d < end && d <= to; d = addDaysFast(d)) {
     if (!isTrainingDay(state, d)) continue
+    const chosen = state.templateOverrides?.[d]
+    const forced = chosen ? state.templates.findIndex((t) => t.id === chosen) : -1
+    const cur = forced >= 0 ? forced : idx
+    const skipped = !!state.skipped?.[d]
     if (d >= from) {
-      const template = state.templates[((session % n) + n) % n]
+      const template = state.templates[cur]
       const week = weekIndex(d, p.startDate)
       days.push({
         date: d,
@@ -137,9 +142,12 @@ export const plannedDays = (state: AppState, from: string, to: string): PlannedD
         week,
         deload: isDeloadWeek(week),
         exercises: template.exerciseIds.filter(isAvailable).map((id) => planExercise(state, id, d)),
+        ...(skipped ? { skipped } : {}),
       })
     }
-    session++
+    // Пропущенная тренировка не сдвигает чередование: в следующий раз будет она же.
+    // Выбранная вручную — продолжает чередование от себя (сделала A подряд — дальше B)
+    if (!skipped) idx = (cur + 1) % n
   }
   return days
 }

@@ -3,7 +3,7 @@ import { Brand } from '../components/Brand'
 import { exerciseById } from '../data/machines'
 import { GROUP_CLASSES, type GroupClass } from '../data/groups'
 import { MONTHS, WEEKDAYS_SHORT, addDays, formatDayLong, mondayOf, parseISO, toISO, todayISO, weekday } from '../lib/date'
-import { isTrainingDay, plannedDays, programEnd, weekIndex } from '../lib/plan'
+import { isTrainingDay, plannedDay, plannedDays, programEnd, weekIndex } from '../lib/plan'
 import { useStore } from '../store'
 import type { PlannedDay } from '../types'
 import { Section, fmtKg, navigate, useSwipe } from '../components/ui'
@@ -27,12 +27,29 @@ export function CalendarScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, month])
 
-  const next = useMemo(() => plannedDays(state, today, programEnd(p)).find((d) => !state.logs[d.date]?.completed), [state, today, p])
+  const next = useMemo(() => plannedDays(state, today, programEnd(p)).find((d) => !state.logs[d.date]?.completed && !d.skipped), [state, today, p])
   const totalWeeks = weekIndex(addDays(programEnd(p), -1), p.startDate) + 1
   const curWeek = Math.min(Math.max(weekIndex(today, p.startDate) + 1, 0), totalWeeks)
 
   // Прошлый день: тап отмечает, что тренировка была (или не была). Будущий: тренировка или отдых
+  // Если день уже тренировочный, тап сначала перебирает тренировки (A → B), и только потом снимает день
   const toggleDay = (d: string) => {
+    const pd = plannedDay(state, d)
+    const active = d < today ? !!state.logs[d]?.completed && !!pd : !!pd
+    if (active && pd) {
+      const rest = { ...state.templateOverrides }
+      delete rest[d]
+      const natural = plannedDay({ ...state, templateOverrides: rest }, d)?.template.id ?? pd.template.id
+      const ids = state.templates.map((t) => t.id)
+      const n = ids.length
+      const k = (ids.indexOf(pd.template.id) - ids.indexOf(natural) + n) % n
+      if (k < n - 1) {
+        const nextId = ids[(ids.indexOf(pd.template.id) + 1) % n]
+        dispatch({ type: 'templateFor', date: d, templateId: nextId })
+        return
+      }
+      dispatch({ type: 'templateFor', date: d, templateId: null })
+    }
     const scheduled = d >= p.startDate && p.trainingDays.includes(weekday(d))
     if (d < today) {
       const done = !!state.logs[d]?.completed && isTrainingDay(state, d)
@@ -108,6 +125,8 @@ export function CalendarScreen() {
               d.slice(0, 7) !== month && 'out',
               pd && 'planned',
               pd?.deload && 'deload',
+              pd?.skipped && 'skipped',
+              pd && state.templateOverrides?.[d] && 'swapped',
               visited && 'group',
               done && 'done',
               d === today && 'today',
@@ -128,8 +147,9 @@ export function CalendarScreen() {
         </button>
         {editing && (
           <p className="muted" style={{ margin: '10px 0 0' }}>
-            Прошедший день: нажми, если в этот день была тренировка. Будущий день: нажми, чтобы добавить тренировку или сделать день отдыхом.
-            Тренировки A и B чередуются: первая тренировка программы — A, отмеченные до неё идут назад (B, A, …).
+            Нажимай на день по кругу: тренировка → другая тренировка (A ↔ B) → отдых. Прошедший день так отмечается как сделанный.
+            По умолчанию A и B чередуются; если поменять тренировку на какой-то день, дальше чередование продолжится от неё.
+            Пропущенную тренировку отметь кнопкой «Пропустила» на экране дня: она перенесётся на следующий раз.
           </p>
         )}
         <div className="legend">

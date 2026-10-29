@@ -144,7 +144,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
             >
               <span>{d.date === today ? 'Сегодня' : WD[weekday(d.date) - 1]}</span>
               <span>{shortDate(d.date)}</span>
-              <span className={`st ${state.logs[d.date]?.completed ? 'done' : d.date === date ? 'cur' : ''}`}>{state.logs[d.date]?.completed && <CheckIcon />}</span>
+              <span className={`st ${state.logs[d.date]?.completed ? 'done' : d.skipped ? 'skip' : d.date === date ? 'cur' : ''}`}>{state.logs[d.date]?.completed && <CheckIcon />}</span>
             </button>
           ))}
         </div>
@@ -154,6 +154,36 @@ export function DayScreen({ date: requested }: { date?: string }) {
       </nav>
 
       <div key={date} className={`stack slide-${dir}`}>
+      {!completed && (
+        <div className="glass day-controls fade-in">
+          <span className="muted small">Делаю</span>
+          <div className="seg">
+            {state.templates.map((t) => (
+              <button
+                key={t.id}
+                className={t.id === day.template.id ? 'on' : ''}
+                aria-pressed={t.id === day.template.id}
+                onClick={() => dispatch({ type: 'templateFor', date, templateId: t.id })}
+              >
+                {t.id}
+              </button>
+            ))}
+          </div>
+          <button className={`chip ${day.skipped ? 'pick-on' : ''}`} style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'skip', date, on: !day.skipped })}>
+            {day.skipped ? 'Вернуть' : 'Пропустила'}
+          </button>
+        </div>
+      )}
+      {day.skipped ? (
+        <section className="glass card fade-in stack" style={{ gap: 6 }}>
+          <div className="title" style={{ fontSize: 20 }}>Пропущено</div>
+          <p className="muted desc" style={{ margin: 0 }}>
+            Ничего страшного. {day.template.name} переносится на следующий тренировочный день
+            {nextDay ? ` (${formatDayLong(nextDay.date)})` : ''}, дальше чередование продолжится как обычно.
+          </p>
+        </section>
+      ) : (
+      <>
       <div className="glass progress-card fade-in">
         <span>
           <b>{done}</b> / {allSets.length} подходов
@@ -187,6 +217,8 @@ export function DayScreen({ date: requested }: { date?: string }) {
       )}
 
       <Summary date={date} exercises={day.exercises} />
+      </>
+      )}
       </div>
     </div>
   )

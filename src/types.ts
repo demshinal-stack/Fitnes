@@ -132,6 +132,10 @@ export interface LifeGoal {
   targetDate?: string
   /** Для «похудеть»: желаемый вес тела */
   targetBodyWeight?: number
+  /** Цель в единицах трекера: +2 см ягодиц, −3 см талии, +4° осанки */
+  target?: number
+  /** Помимо зала слежу за питанием/шагами: прогноз с поправкой из исследований */
+  boosted?: boolean
   createdAt: string
   done?: boolean
 }
@@ -162,6 +166,10 @@ export interface AppState {
   templatesVersion: number
   /** Ручная правка календаря: true — тренировка, false — отдых */
   dayOverrides: Record<string, boolean>
+  /** Пропущенные тренировки: эта тренировка переносится на следующий тренировочный день */
+  skipped?: Record<string, true>
+  /** Тренировка, выбранная вручную на дату (A/B); дальше чередование продолжается от неё */
+  templateOverrides?: Record<string, string>
 }
 
 export interface PlannedExercise {
@@ -178,4 +186,6 @@ export interface PlannedDay {
   week: number
   deload: boolean
   exercises: PlannedExercise[]
+  /** Тренировка пропущена: в следующий раз будет эта же */
+  skipped?: boolean
 }
