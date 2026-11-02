@@ -176,6 +176,16 @@ export interface AppState {
   measurements?: Measurement[]
   /** Замер, от которого считается прирост; по умолчанию самый ранний */
   measureStart?: string
+  /** Идущая тренировка: упражнения раскрываются по одному */
+  workout?: ActiveWorkout
+}
+
+export interface ActiveWorkout {
+  date: string
+  /** Выполненные упражнения в том порядке, в каком их сделали */
+  done: string[]
+  /** Раскрытое сейчас упражнение */
+  current: string | null
 }
 
 export interface Measurement {

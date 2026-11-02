@@ -74,6 +74,39 @@ export function DayScreen({ date: requested }: { date?: string }) {
     first.current = false
   }, [date])
 
+  // Пошаговый режим: упражнения раскрываются по одному
+  const session = state.workout?.date === date && !log?.completed ? state.workout : null
+  const isDone = (pe: PlannedExercise) => setsOf(state, date, pe).every((x) => x.done)
+  const exs = day && !day.skipped ? day.exercises : []
+  // Сделанные — наверху в том порядке, как их делали, дальше остальные по списку
+  const flow = session
+    ? [...session.done.flatMap((id) => exs.filter((e) => e.exerciseId === id)), ...exs.filter((e) => !session.done.includes(e.exerciseId))]
+    : exs
+  const current = session?.current ?? null
+  const currentPe = exs.find((e) => e.exerciseId === current)
+  const currentFinished = !!currentPe && isDone(currentPe) && !session?.done.includes(current!)
+  const nextAfter = (id: string | null) =>
+    flow.find((e) => e.exerciseId !== id && !session?.done.includes(e.exerciseId) && !isDone(e))?.exerciseId ?? null
+  // Все подходы отмечены — упражнение сворачивается, раскрывается следующее
+  useEffect(() => {
+    if (!currentFinished || !day) return
+    const t = setTimeout(() => dispatch({ type: 'workoutDone', exerciseId: current!, templateId: day.template.id, next: nextAfter(current) }), 700)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentFinished, current])
+  const finishRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!session) return
+    const el = current ? document.querySelector(`[data-ex="${current}"]`) : finishRef.current
+    el?.scrollIntoView({ behavior: 'smooth', block: current ? 'start' : 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, !!session])
+  const start = () => {
+    const done = exs.filter(isDone).map((e) => e.exerciseId)
+    dispatch({ type: 'workoutStart', date, done, current: exs.find((e) => !isDone(e))?.exerciseId ?? null })
+    setOrdering(false)
+  }
+
   if (!day)
     return (
       <div className="stack">
@@ -154,7 +187,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
       </nav>
 
       <div key={date} className={`stack slide-${dir}`}>
-      {!completed && (
+      {!completed && !session && (
         <div className="glass day-controls fade-in">
           <span className="muted small">Делаю</span>
           <div className="seg">
@@ -194,14 +227,54 @@ export function DayScreen({ date: requested }: { date?: string }) {
         <span className="muted small">{pct}%</span>
       </div>
 
-      <div className="row between">
-        <span className="eyebrow">Упражнения</span>
-        <button className={`chip ${ordering ? 'wine' : ''}`} onClick={() => setOrdering(!ordering)}>
-          {ordering ? 'Готово' : '⇅ Порядок'}
+      {!completed && !session && (
+        <button className="btn block start-btn fade-in" onClick={start}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7 4.5v15l13-7.5z" />
+          </svg>
+          Начать тренировку
         </button>
+      )}
+
+      <div className="row between">
+        <span className="eyebrow">{session ? 'Идёт тренировка' : 'Упражнения'}</span>
+        {!session && (
+          <button className={`chip ${ordering ? 'wine' : ''}`} onClick={() => setOrdering(!ordering)}>
+            {ordering ? 'Готово' : '⇅ Порядок'}
+          </button>
+        )}
       </div>
 
-      {ordering ? (
+      {session ? (
+        <>
+          {flow.map((pe, i) => {
+            const id = pe.exerciseId
+            const n = i + 1
+            return id === current ? (
+              <div key={id} data-ex={id} className="stack workout-open" style={{ gap: 6 }}>
+                <div className="row between workout-now">
+                  <span className="small">
+                    <b>{n}</b> · сейчас
+                  </span>
+                  <button className="link small" onClick={() => dispatch({ type: 'workoutOpen', exerciseId: null })}>
+                    Свернуть
+                  </button>
+                </div>
+                <ExerciseCard date={date} plan={pe} locked={false} />
+              </div>
+            ) : (
+              <WorkoutRow key={id} n={n} date={date} plan={pe} done={session.done.includes(id) || isDone(pe)} onOpen={() => dispatch({ type: 'workoutOpen', exerciseId: id })} />
+            )
+          })}
+          {!current && flow.every(isDone) && (
+            <section className="glass card fade-in stack" style={{ gap: 4, textAlign: 'center' }}>
+              <div className="title" style={{ fontSize: 20 }}>Все упражнения сделаны</div>
+              <p className="muted small" style={{ margin: 0 }}>Порядок, в котором ты их делала, сохранён для «{day.template.name}».</p>
+            </section>
+          )}
+          <AddExtra date={date} have={day.exercises.map((e) => e.exerciseId)} />
+        </>
+      ) : ordering ? (
         <OrderList ids={day.exercises.filter((e) => !e.extra).map((e) => e.exerciseId)} templateId={day.template.id} />
       ) : (
         <>
@@ -224,8 +297,12 @@ export function DayScreen({ date: requested }: { date?: string }) {
         </>
       )}
 
-      <button className={`btn block ${completed ? 'ghost' : ''}`} onClick={() => dispatch({ type: 'complete', date, completed: !completed })}>
-        {completed ? 'Отметить как невыполненную' : 'Завершить тренировку'}
+      <button
+        ref={finishRef}
+        className={`btn block ${completed ? 'ghost' : ''} ${session && !current ? 'finish-ready' : ''}`}
+        onClick={() => dispatch({ type: 'complete', date, completed: !completed })}
+      >
+        {completed ? 'Отметить как невыполненную' : 'Закончить тренировку'}
       </button>
       {!completed && (
         <p className="muted" style={{ textAlign: 'center', margin: 0 }}>
@@ -594,6 +671,30 @@ function ExerciseCard({ date, plan, locked }: { date: string; plan: PlannedExerc
         </div>
       )}
     </section>
+  )
+}
+
+/** Свёрнутое упражнение в идущей тренировке: тап раскрывает его */
+function WorkoutRow({ n, date, plan, done, onOpen }: { n: number; date: string; plan: PlannedExercise; done: boolean; onOpen: () => void }) {
+  const { state } = useStore()
+  const ex = exerciseById(plan.exerciseId)
+  const sets = setsOf(state, date, plan)
+  const marked = sets.filter((x) => x.done).length
+  const top = sets[0]
+  return (
+    <button data-ex={ex.id} className={`glass workout-row fade-in ${done ? 'done' : ''}`} onClick={onOpen}>
+      <span className="n">{n}</span>
+      <Thumb className="thumb" exerciseId={ex.id} />
+      <span className="workout-row-text">
+        <span className="title">{ex.name}</span>
+        <span className="muted small">
+          {done ? 'сделано · ' : marked ? `${marked} из ${sets.length} · ` : ''}
+          {sets.length} × {top?.reps ?? plan.reps}
+          {ex.bodyweight ? '' : ` · ${fmtKg(Math.max(...sets.map((x) => x.weight)))} кг`}
+        </span>
+      </span>
+      <span className={`workout-st ${done ? 'on' : ''}`}>{done ? <CheckIcon /> : '›'}</span>
+    </button>
   )
 }
 

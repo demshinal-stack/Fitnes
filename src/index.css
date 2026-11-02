@@ -2393,3 +2393,89 @@ img.vec,
 .measure-inputs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .measure-inputs .input { min-width: 0; width: 100%; text-align: center; }
 .measured { padding: 10px 12px; border-radius: 14px; background: rgba(198, 244, 50, 0.12); border: 1px solid rgba(198, 244, 50, 0.35); }
+
+/* ——— Пошаговая тренировка ——— */
+.start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 17px;
+  padding-block: 18px;
+  animation: start-glow 2.4s ease-in-out infinite;
+}
+@keyframes start-glow {
+  50% {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -2px 4px rgba(90, 120, 0, 0.25), 0 0 44px rgba(198, 244, 50, 0.6);
+  }
+}
+.workout-open,
+.workout-row {
+  scroll-margin-top: 16px;
+}
+.workout-now {
+  padding: 0 6px;
+  color: var(--pink-accent);
+}
+.workout-now .link {
+  color: rgba(255, 255, 255, 0.7);
+}
+.workout-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px 10px 12px;
+  border-radius: 24px;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.workout-row .n {
+  width: 18px;
+  flex: none;
+  text-align: center;
+  font-weight: 500;
+  color: var(--muted);
+}
+.workout-row .thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+.workout-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.workout-row-text .title {
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workout-row.done {
+  opacity: 0.72;
+}
+.workout-st {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  font-size: 20px;
+  color: #333;
+}
+.workout-st.on {
+  background: var(--pink-accent);
+  border-color: var(--pink-accent);
+  color: #3a0a1c;
+}
+.finish-ready {
+  animation: start-glow 2.4s ease-in-out infinite;
+}

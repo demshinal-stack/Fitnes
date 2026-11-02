@@ -87,6 +87,9 @@ export type Action =
   | { type: 'lifeGoal'; goal: LifeGoal }
   | { type: 'removeLifeGoal'; id: string }
   | { type: 'removeGoal'; exerciseId: string }
+  | { type: 'workoutStart'; date: string; done: string[]; current: string | null }
+  | { type: 'workoutOpen'; exerciseId: string | null }
+  | { type: 'workoutDone'; exerciseId: string; templateId: string; next: string | null }
   | { type: 'replace'; state: AppState }
 
 const withoutDate = (list: AppState['anchors'][string] = [], date: string) => list.filter((a) => a.date !== date)
@@ -145,7 +148,24 @@ export const reducer = (s: AppState, a: Action): AppState => {
         const anchor = a.completed && !deload ? anchorFromLog(s, exId, a.date, sets) : null
         if (anchor) anchors[exId] = [...anchors[exId], anchor]
       }
-      return { ...s, anchors, logs: { ...s.logs, [a.date]: { ...day, completed: a.completed } } }
+      // Закрытая тренировка заканчивает и пошаговый режим
+      const workout = a.completed && s.workout?.date === a.date ? undefined : s.workout
+      return { ...s, anchors, workout, logs: { ...s.logs, [a.date]: { ...day, completed: a.completed } } }
+    }
+    case 'workoutStart':
+      return { ...s, workout: { date: a.date, done: a.done, current: a.current } }
+    case 'workoutOpen':
+      return s.workout ? { ...s, workout: { ...s.workout, current: a.exerciseId } } : s
+    case 'workoutDone': {
+      if (!s.workout) return s
+      const done = s.workout.done.includes(a.exerciseId) ? s.workout.done : [...s.workout.done, a.exerciseId]
+      // Порядок, в котором упражнения сделаны, становится порядком тренировки на будущее
+      const templates = s.templates.map((t) => {
+        if (t.id !== a.templateId || !t.exerciseIds.includes(a.exerciseId)) return t
+        const first = done.filter((id) => t.exerciseIds.includes(id))
+        return { ...t, exerciseIds: [...first, ...t.exerciseIds.filter((id) => !first.includes(id))] }
+      })
+      return { ...s, templates, workout: { ...s.workout, done, current: a.next } }
     }
     case 'setWeight':
       return {
