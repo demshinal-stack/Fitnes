@@ -3,11 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Brand } from '../components/Brand'
 import { exerciseById, machineById, EXERCISES, TEMPLATE_TAGLINES } from '../data/machines'
 import { addDays, formatDayLong, todayISO, weekday } from '../lib/date'
-import { copiedSets, growth, recommendedPlan, stepFor, plannedDay, plannedDays, previousPlan, programEnd, settingsFor, stackWeights, weekIndex } from '../lib/plan'
+import { FREE_ID, copiedSets, growth, recommendedPlan, stepFor, plannedDay, plannedDays, previousPlan, programEnd, settingsFor, stackWeights, weekIndex } from '../lib/plan'
 import { useStore } from '../store'
 import type { AppState, PlannedExercise, SetLog } from '../types'
 import { Back, CheckIcon, Stepper, fmtKg, navigate, switchTo } from '../components/ui'
 import { Thumb } from '../components/Thumb'
+import { RestDay } from '../components/RestDay'
 import { NumberPicker } from '../components/NumberPicker'
 
 const WD = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
@@ -111,8 +112,9 @@ export function DayScreen({ date: requested }: { date?: string }) {
     return (
       <div className="stack">
         <Back />
-        <h1 className="display">День отдыха</h1>
-        <p className="muted">На {formatDayLong(date)} тренировок не запланировано.</p>
+        <section className="glass card fade-in">
+          <RestDay key={date} date={date} />
+        </section>
       </div>
     )
 
@@ -148,7 +150,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
         <h1 className="display">
           {day.template.name}
           <br />
-          <em>{tagline}</em>
+          <em className="tagline">{tagline}</em>
         </h1>
         <div className="row wrap" style={{ gap: 8, marginTop: 6 }}>
           {day.week >= 0 ? (
@@ -198,13 +200,15 @@ export function DayScreen({ date: requested }: { date?: string }) {
                 aria-pressed={t.id === day.template.id}
                 onClick={() => dispatch({ type: 'templateFor', date, templateId: t.id })}
               >
-                {t.id}
+                {t.name}
               </button>
             ))}
           </div>
-          <button className={`chip ${day.skipped ? 'pick-on' : ''}`} style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'skip', date, on: !day.skipped })}>
-            {day.skipped ? 'Вернуть' : 'Пропустила'}
-          </button>
+          {day.template.id !== FREE_ID && (
+            <button className={`chip ${day.skipped ? 'pick-on' : ''}`} style={{ marginLeft: 'auto' }} onClick={() => dispatch({ type: 'skip', date, on: !day.skipped })}>
+              {day.skipped ? 'Вернуть' : 'Пропустила'}
+            </button>
+          )}
         </div>
       )}
       {day.skipped ? (
@@ -238,7 +242,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
 
       <div className="row between">
         <span className="eyebrow">{session ? 'Идёт тренировка' : 'Упражнения'}</span>
-        {!session && (
+        {!session && day.template.id !== FREE_ID && (
           <button className={`chip ${ordering ? 'wine' : ''}`} onClick={() => setOrdering(!ordering)}>
             {ordering ? 'Готово' : '⇅ Порядок'}
           </button>
@@ -269,7 +273,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
           {!current && flow.every(isDone) && (
             <section className="glass card fade-in stack" style={{ gap: 4, textAlign: 'center' }}>
               <div className="title" style={{ fontSize: 20 }}>Все упражнения сделаны</div>
-              <p className="muted small" style={{ margin: 0 }}>Порядок, в котором ты их делала, сохранён для «{day.template.name}».</p>
+              {day.template.id !== FREE_ID && <p className="muted small" style={{ margin: 0 }}>Порядок, в котором ты их делала, сохранён для «{day.template.name}».</p>}
             </section>
           )}
           <AddExtra date={date} have={day.exercises.map((e) => e.exerciseId)} />
@@ -280,7 +284,7 @@ export function DayScreen({ date: requested }: { date?: string }) {
         <>
           {day.exercises.map((pe) => (
             <div key={pe.exerciseId} className="stack" style={{ gap: 6 }}>
-              {pe.extra && (
+              {pe.extra && day.template.id !== FREE_ID && (
                 <div className="row between extra-label">
                   <span className="small">+ добавлено на этот день</span>
                   {!completed && (

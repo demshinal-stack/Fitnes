@@ -33,6 +33,31 @@ describe('план', () => {
     ])
   })
 
+  it('своя тренировка в день отдыха не сдвигает чередование A/B', () => {
+    const s = reducer(base(), { type: 'freeDay', date: '2026-11-03', exerciseIds: ['dead-bug', 'chest-press'] })
+    const days = plannedDays(s, '2026-11-02', '2026-11-06')
+    expect(days.map((d) => [d.date, d.template.id])).toEqual([
+      ['2026-11-02', 'A'],
+      ['2026-11-03', 'free'],
+      ['2026-11-04', 'B'],
+      ['2026-11-06', 'A'],
+    ])
+    expect(days[1].exercises.map((e) => e.exerciseId)).toEqual(['dead-bug', 'chest-press'])
+    // выбрала A вместо своей — день обычный, дальше чередование от A
+    const a = reducer(s, { type: 'templateFor', date: '2026-11-03', templateId: 'A' })
+    expect(plannedDays(a, '2026-11-02', '2026-11-04').map((d) => d.template.id)).toEqual(['A', 'A', 'B'])
+  })
+
+  it('старые названия «Тренировка A/B» меняются на новые, свои остаются', () => {
+    const s = base()
+    const old = { ...s, templates: [{ ...s.templates[0], name: 'Тренировка A', tagline: 'тяни. толкай. сгибай.' }, { ...s.templates[1], name: 'Моя B', tagline: 'архитектура тела: v-образность' }] }
+    const m = migrate(old)
+    expect(m.templates.map((t) => [t.name, t.tagline])).toEqual([
+      ['Персик', 'ягодицы · ноги · руки'],
+      ['Моя B', 'спина · плечи · пресс'],
+    ])
+  })
+
   it('пропущенная тренировка переносится, выбранная вручную продолжает чередование', () => {
     const ids = (s: AppState) => plannedDays(s, '2026-11-02', '2026-11-11').map((d) => [d.date, d.template.id, !!d.skipped])
     const skip = reducer(base(), { type: 'skip', date: '2026-11-04', on: true })
