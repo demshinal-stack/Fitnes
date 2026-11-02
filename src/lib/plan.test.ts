@@ -144,4 +144,18 @@ describe('календарь', () => {
     s = reducer(s, { type: 'complete', date: '2026-10-26', completed: true })
     expect(copiedSets(s, '2026-10-26', 'seated-cable-row')).toEqual(sets)
   })
+
+  it('пошаговая тренировка: порядок выполнения запоминается в тренировке', () => {
+    let s = base()
+    const a = s.templates.find((t) => t.id === 'A')!.exerciseIds
+    s = reducer(s, { type: 'workoutStart', date: '2026-11-02', done: [], current: a[0] })
+    s = reducer(s, { type: 'workoutDone', exerciseId: a[0], templateId: 'A', next: a[1] })
+    // пролистала и сделала третье раньше второго
+    s = reducer(s, { type: 'workoutOpen', exerciseId: a[2] })
+    s = reducer(s, { type: 'workoutDone', exerciseId: a[2], templateId: 'A', next: a[1] })
+    expect(s.templates.find((t) => t.id === 'A')!.exerciseIds).toEqual([a[0], a[2], a[1], ...a.slice(3)])
+    expect(s.workout).toEqual({ date: '2026-11-02', done: [a[0], a[2]], current: a[1] })
+    s = reducer(s, { type: 'complete', date: '2026-11-02', completed: true })
+    expect(s.workout).toBeUndefined()
+  })
 })
