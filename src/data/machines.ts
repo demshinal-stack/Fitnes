@@ -721,22 +721,31 @@ const ALL_EXERCISES: Exercise[] = [
 /** Меняется, когда состав тренировок по умолчанию переделан целиком */
 export const TEMPLATES_VERSION = 2
 
-/** Подписи тренировок от пользователя (2026-10-29); работают и для уже сохранённых шаблонов */
-export const TEMPLATE_TAGLINES: Record<string, string> = {
-  A: 'тяни. толкай. сгибай.',
-  B: 'архитектура тела: v-образность',
+/** Названия тренировок (2026-11-02): девчачьи вместо «Тренировка A/B» */
+export const TEMPLATE_NAMES: Record<string, string> = {
+  A: 'Персик',
+  B: 'Балерина',
 }
+
+/** Подписи под названием: одна строка, одинаковой длины, по сути тренировки (2026-11-02) */
+export const TEMPLATE_TAGLINES: Record<string, string> = {
+  A: 'ягодицы · ноги · руки',
+  B: 'спина · плечи · пресс',
+}
+
+/** Старые названия и подписи по умолчанию: в сохранённых тренировках меняем их на новые */
+export const OLD_TEMPLATE_TEXTS = ['Тренировка A', 'Тренировка B', 'тяни. толкай. сгибай.', 'архитектура тела: v-образность']
 
 export const DEFAULT_TEMPLATES: WorkoutTemplate[] = [
   {
     id: 'A',
-    name: 'Тренировка A',
+    name: TEMPLATE_NAMES.A,
     tagline: TEMPLATE_TAGLINES.A,
     exerciseIds: ['seated-cable-row', 'seated-leg-curl', 'lying-leg-curl', 'hip-abduction', 'hip-adduction', 'chest-press', 'cable-triceps-pushdown', 'dumbbell-front-raise', 'dead-bug'],
   },
   {
     id: 'B',
-    name: 'Тренировка B',
+    name: TEMPLATE_NAMES.B,
     tagline: TEMPLATE_TAGLINES.B,
     // Состав по выбору пользователя 2026-10-29; ещё упражнения она добавит позже
     exerciseIds: ['lat-pulldown', 'dumbbell-shoulder-press', 'reclined-hip-abduction', 'ball-crunch'],

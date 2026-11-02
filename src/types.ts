@@ -172,6 +172,8 @@ export interface AppState {
   templateOverrides?: Record<string, string>
   /** Упражнения, добавленные к тренировке только на этот день */
   extraExercises?: Record<string, string[]>
+  /** Своя тренировка в день отдыха: только выбранные упражнения (из extraExercises), чередование A/B не сдвигает */
+  freeDays?: Record<string, true>
   /** Замеры тела, см */
   measurements?: Measurement[]
   /** Замер, от которого считается прирост; по умолчанию самый ранний */

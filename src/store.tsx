@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
 import { useCloudSync, type CloudStatus } from './lib/cloud'
-import { DEFAULT_TEMPLATES, EXERCISES, TEMPLATES_VERSION } from './data/machines'
+import { DEFAULT_TEMPLATES, EXERCISES, OLD_TEMPLATE_TEXTS, TEMPLATE_NAMES, TEMPLATE_TAGLINES, TEMPLATES_VERSION } from './data/machines'
 import { anchorFromLog, isDeloadWeek, overWeight, weekIndex } from './lib/plan'
 import type { AppState, Measurement, DayLog, ExerciseOverride, Goal, GroupVisit, LifeGoal, Profile, SetLog, StackSpec, WorkoutTemplate } from './types'
 
@@ -32,10 +32,18 @@ const withDefaults = (saved: Partial<AppState>): AppState => ({
 
 /** Новые упражнения из обновления приложения добавляем в те тренировки, где они стоят по умолчанию */
 export const migrate = (saved: AppState): AppState => {
-  const s =
+  const s0 =
     (saved.templatesVersion ?? 1) < TEMPLATES_VERSION
       ? { ...saved, templates: DEFAULT_TEMPLATES, templatesVersion: TEMPLATES_VERSION, knownExercises: EXERCISES.map((e) => e.id) }
       : saved
+  // Старые «Тренировка A/B» и их подписи — на новые названия; свои названия не трогаем
+  const old = (t: string | undefined) => t === undefined || OLD_TEMPLATE_TEXTS.includes(t)
+  const renamed = s0.templates.map((t) =>
+    TEMPLATE_NAMES[t.id] && (old(t.name) || old(t.tagline))
+      ? { ...t, name: old(t.name) ? TEMPLATE_NAMES[t.id] : t.name, tagline: old(t.tagline) ? TEMPLATE_TAGLINES[t.id] : t.tagline }
+      : t,
+  )
+  const s = renamed.some((t, i) => t !== s0.templates[i]) ? { ...s0, templates: renamed } : s0
   const known = new Set(s.knownExercises ?? [])
   const fresh = EXERCISES.filter((e) => !known.has(e.id)).map((e) => e.id)
   if (fresh.length === 0) return s
@@ -77,6 +85,7 @@ export type Action =
   | { type: 'dayOverride'; date: string; on: boolean | null }
   | { type: 'skip'; date: string; on: boolean }
   | { type: 'extra'; date: string; exerciseId: string; on: boolean }
+  | { type: 'freeDay'; date: string; exerciseIds: string[] | null }
   | { type: 'measure'; m: Measurement }
   | { type: 'removeMeasure'; id: string }
   | { type: 'measureStart'; id: string | undefined }
@@ -190,6 +199,18 @@ export const reducer = (s: AppState, a: Action): AppState => {
       const list = (s.extraExercises?.[a.date] ?? []).filter((id) => id !== a.exerciseId)
       return { ...s, extraExercises: { ...s.extraExercises, [a.date]: a.on ? [...list, a.exerciseId] : list } }
     }
+    case 'freeDay': {
+      const freeDays = { ...s.freeDays }
+      const extraExercises = { ...s.extraExercises }
+      if (a.exerciseIds) {
+        freeDays[a.date] = true
+        extraExercises[a.date] = a.exerciseIds
+      } else {
+        delete freeDays[a.date]
+        delete extraExercises[a.date]
+      }
+      return { ...s, freeDays, extraExercises }
+    }
     case 'skip': {
       const skipped = { ...s.skipped }
       if (a.on) skipped[a.date] = true
@@ -200,7 +221,11 @@ export const reducer = (s: AppState, a: Action): AppState => {
       const templateOverrides = { ...s.templateOverrides }
       if (a.templateId) templateOverrides[a.date] = a.templateId
       else delete templateOverrides[a.date]
-      return { ...s, templateOverrides }
+      // Выбрала A или B вместо своей тренировки — день становится обычным тренировочным
+      if (!s.freeDays?.[a.date] || !a.templateId) return { ...s, templateOverrides }
+      const freeDays = { ...s.freeDays }
+      delete freeDays[a.date]
+      return { ...s, templateOverrides, freeDays, dayOverrides: { ...s.dayOverrides, [a.date]: true } }
     }
     case 'dayOverride': {
       const dayOverrides = { ...s.dayOverrides }

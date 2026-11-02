@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Brand } from '../components/Brand'
 import { exerciseById } from '../data/machines'
 import { GROUP_CLASSES, type GroupClass } from '../data/groups'
 import { MONTHS, WEEKDAYS_SHORT, addDays, formatDayLong, mondayOf, parseISO, toISO, todayISO, weekday } from '../lib/date'
-import { isTrainingDay, plannedDay, plannedDays, programEnd, weekIndex } from '../lib/plan'
+import { FREE_ID, isTrainingDay, plannedDay, plannedDays, programEnd, weekIndex } from '../lib/plan'
+import { RestDay } from '../components/RestDay'
 import { useStore } from '../store'
 import type { PlannedDay } from '../types'
 import { Section, fmtKg, navigate, useSwipe } from '../components/ui'
@@ -13,6 +15,8 @@ export function CalendarScreen() {
   const p = state.profile!
   const today = todayISO()
   const [editing, setEditing] = useState(false)
+  // День отдыха, открытый в нижней шторке
+  const [restDate, setRestDate] = useState<string | null>(null)
   const [month, setMonth] = useState(() => {
     const base = today < p.startDate ? p.startDate : today
     return base.slice(0, 7)
@@ -35,6 +39,12 @@ export function CalendarScreen() {
   // Если день уже тренировочный, тап сначала перебирает тренировки (A → B), и только потом снимает день
   const toggleDay = (d: string) => {
     const pd = plannedDay(state, d)
+    // Своя тренировка: тап снимает её, день снова отдых
+    if (pd?.template.id === FREE_ID) {
+      dispatch({ type: 'freeDay', date: d, exerciseIds: null })
+      if (state.logs[d]?.completed) dispatch({ type: 'complete', date: d, completed: false })
+      return
+    }
     const active = d < today ? !!state.logs[d]?.completed && !!pd : !!pd
     if (active && pd) {
       const rest = { ...state.templateOverrides }
@@ -128,15 +138,28 @@ export function CalendarScreen() {
               pd?.skipped && 'skipped',
               pd && state.templateOverrides?.[d] && 'swapped',
               visited && 'group',
+              !pd && !visited && 'rest',
               done && 'done',
               d === today && 'today',
             ]
               .filter(Boolean)
               .join(' ')
             return (
-              <button key={d} className={cls} onClick={() => (editing ? toggleDay(d) : pd ? navigate(`/day/${d}`) : visited && document.getElementById('groups')?.scrollIntoView({ behavior: 'smooth' }))} disabled={!editing && !pd && !visited}>
+              <button
+                key={d}
+                className={cls}
+                onClick={() =>
+                  editing
+                    ? toggleDay(d)
+                    : pd
+                      ? navigate(`/day/${d}`)
+                      : visited
+                        ? document.getElementById('groups')?.scrollIntoView({ behavior: 'smooth' })
+                        : setRestDate(d)
+                }
+              >
                 {Number(d.slice(8))}
-                {pd && <span className="tag">{pd.template.id}</span>}
+                {pd && <span className="tag">{pd.template.id === FREE_ID ? '♡' : pd.template.id}</span>}
                 {visited && <span className="gr">гр</span>}
               </button>
             )
@@ -171,8 +194,23 @@ export function CalendarScreen() {
             <i style={{ boxShadow: '0 0 0 2px var(--blue)' }} />
             сегодня
           </span>
+          <span>
+            <i className="legend-rest" />
+            отдых
+          </span>
         </div>
       </section>
+
+      {restDate &&
+        createPortal(
+          <div className="sheet-backdrop rest-backdrop" onClick={() => setRestDate(null)}>
+            <div className="sheet glass rest-sheet" role="dialog" aria-label="День отдыха" onClick={(e) => e.stopPropagation()}>
+              <span className="sheet-grip" aria-hidden="true" />
+              <RestDay key={restDate} date={restDate} onDone={() => setRestDate(null)} />
+            </div>
+          </div>,
+          document.body,
+        )}
 
       <div id="groups">
         <Section eyebrow="Можно ходить" title="Групповые">

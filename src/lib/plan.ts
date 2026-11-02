@@ -1,5 +1,5 @@
 import { exerciseById, isAvailable, machineById } from '../data/machines'
-import type { Anchor, AppState, Exercise, Goal, PlannedDay, PlannedExercise, Profile, SetLog, StackSpec } from '../types'
+import type { Anchor, AppState, Exercise, Goal, PlannedDay, PlannedExercise, Profile, SetLog, StackSpec, WorkoutTemplate } from '../types'
 import { addDays, addMonths, diffDays, mondayOf, weekday } from './date'
 
 const EXPERIENCE_INDEX = { beginner: 0, intermediate: 1, advanced: 2 } as const
@@ -120,14 +120,27 @@ export const plannedDays = (state: AppState, from: string, to: string): PlannedD
   // Отмеченные вручную прошлые тренировки могут быть раньше старта программы.
   // Чередование отсчитываем от первой тренировки программы: она всегда A, отмеченные до неё идут назад (B, A, …),
   // поэтому отметка прошлых дней не сдвигает уже сделанные и будущие тренировки
-  const first = Object.keys(state.dayOverrides ?? {})
-    .filter((d) => state.dayOverrides[d])
+  const first = [...Object.keys(state.dayOverrides ?? {}).filter((d) => state.dayOverrides[d]), ...Object.keys(state.freeDays ?? {})]
     .reduce((m, d) => (d < m ? d : m), p.startDate)
   let session = 0
-  for (let d = first; d < p.startDate; d = addDaysFast(d)) if (isTrainingDay(state, d)) session--
+  for (let d = first; d < p.startDate; d = addDaysFast(d)) if (isTrainingDay(state, d) && !state.freeDays?.[d]) session--
   const n = state.templates.length
   let idx = ((session % n) + n) % n
   for (let d = first; d < end && d <= to; d = addDaysFast(d)) {
+    // Своя тренировка в день отдыха: только выбранные упражнения, чередование A/B не трогает
+    if (state.freeDays?.[d]) {
+      if (d >= from) {
+        const week = weekIndex(d, p.startDate)
+        days.push({
+          date: d,
+          template: FREE_TEMPLATE,
+          week,
+          deload: isDeloadWeek(week),
+          exercises: (state.extraExercises?.[d] ?? []).filter(isAvailable).map((id) => ({ ...planExercise(state, id, d), extra: true })),
+        })
+      }
+      continue
+    }
     if (!isTrainingDay(state, d)) continue
     const chosen = state.templateOverrides?.[d]
     const forced = chosen ? state.templates.findIndex((t) => t.id === chosen) : -1
@@ -157,9 +170,14 @@ export const plannedDays = (state: AppState, from: string, to: string): PlannedD
   return days
 }
 
+/** Своя тренировка из выбранных упражнений: не входит в чередование A/B */
+export const FREE_ID = 'free'
+export const FREE_TEMPLATE: WorkoutTemplate = { id: FREE_ID, name: 'Своя тренировка', tagline: 'только то, что хочется', exerciseIds: [] }
+
 /** Тренировочный день: ручная отметка в календаре или день недели из профиля */
 export const isTrainingDay = (state: AppState, d: string) =>
-  state.dayOverrides?.[d] ?? (d >= state.profile!.startDate && state.profile!.trainingDays.includes(weekday(d)))
+  !!state.freeDays?.[d] ||
+  (state.dayOverrides?.[d] ?? (d >= state.profile!.startDate && state.profile!.trainingDays.includes(weekday(d))))
 
 const addDaysFast = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
